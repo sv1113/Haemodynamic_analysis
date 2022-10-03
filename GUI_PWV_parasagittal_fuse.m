@@ -1,35 +1,36 @@
-function varargout = GUI_PWV_parasagittal_final(varargin)
-% GUI_PWV_PARASAGITTAL_FINAL MATLAB code for GUI_PWV_parasagittal_final.fig
-%      GUI_PWV_PARASAGITTAL_FINAL, by itself, creates a new GUI_PWV_PARASAGITTAL_FINAL or raises the existing
+function varargout = GUI_PWV_parasagittal_fuse(varargin)
+% GUI_PWV_PARASAGITTAL_FUSE MATLAB code for GUI_PWV_parasagittal_fuse.fig
+%      GUI_PWV_PARASAGITTAL_FUSE, by itself, creates a new GUI_PWV_PARASAGITTAL_FUSE or raises the existing
 %      singleton*.
 %
-%      H = GUI_PWV_PARASAGITTAL_FINAL returns the handle to a new GUI_PWV_PARASAGITTAL_FINAL or the handle to
+%      H = GUI_PWV_PARASAGITTAL_FUSE returns the handle to a new GUI_PWV_PARASAGITTAL_FUSE or the handle to
 %      the existing singleton*.
 %
-%      GUI_PWV_PARASAGITTAL_FINAL('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in GUI_PWV_PARASAGITTAL_FINAL.M with the given input arguments.
+%      GUI_PWV_PARASAGITTAL_FUSE('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in GUI_PWV_PARASAGITTAL_FUSE.M with the given input arguments.
 %
-%      GUI_PWV_PARASAGITTAL_FINAL('Property','Value',...) creates a new GUI_PWV_PARASAGITTAL_FINAL or raises the
+%      GUI_PWV_PARASAGITTAL_FUSE('Property','Value',...) creates a new GUI_PWV_PARASAGITTAL_FUSE or raises the
 %      existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before GUI_PWV_parasagittal_final_OpeningFcn gets called.  An
+%      applied to the GUI before GUI_PWV_parasagittal_fuse_OpeningFcn gets called.  An
 %      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to GUI_PWV_parasagittal_final_OpeningFcn via varargin.
+%      stop.  All inputs are passed to GUI_PWV_parasagittal_fuse_OpeningFcn via varargin.
 %
 %      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
 %      instance to run (singleton)".
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above text to modify the response to help GUI_PWV_parasagittal_final
+% Edit the above text to modify the response to help
+% GUI_PWV_parasagittal_fuse
 
-% Last Modified by GUIDE v2.5 14-Aug-2020 14:13:11
+% Last Modified by GUIDE v2.5 28-Sep-2022 18:37:39
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @GUI_PWV_parasagittal_final_OpeningFcn, ...
-                   'gui_OutputFcn',  @GUI_PWV_parasagittal_final_OutputFcn, ...
+                   'gui_OpeningFcn', @GUI_PWV_parasagittal_fuse_OpeningFcn, ...
+                   'gui_OutputFcn',  @GUI_PWV_parasagittal_fuse_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
@@ -43,21 +44,21 @@ else
 end
 % End initialization code - DO NOT EDIT
 
-% --- Executes just before GUI_PWV_parasagittal_final is made visible.
-function GUI_PWV_parasagittal_final_OpeningFcn(hObject, eventdata, handles, varargin)
+% --- Executes just before GUI_PWV_parasagittal_fuse is made visible.
+function GUI_PWV_parasagittal_fuse_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to GUI_PWV_parasagittal_final (see VARARGIN)
+% varargin   command line arguments to GUI_PWV_parasagittal_fuse (see VARARGIN)
 
-% Choose default command line output for GUI_PWV_parasagittal_final
+% Choose default command line output for GUI_PWV_parasagittal_fuse
 handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
 
-% UIWAIT makes GUI_PWV_parasagittal_final wait for user response (see UIRESUME)
+% UIWAIT makes GUI_PWV_parasagittal_fuse wait for user response (see UIRESUME)
 global transit_time_asc_desc transit_time_desc_dia transit_time_asc_dia length_asc_desc length_desc_dia length_asc_dia ...
     PWV_asc_desc PWV_desc_dia PWV_asc_dia x_up y_up x_down y_down x_right y_right x_left y_left ...
     x_centreline_asc_desc y_centreline_asc_desc x_centreline_desc_dia y_centreline_desc_dia
@@ -69,12 +70,7 @@ x_centreline_asc_desc = []; y_centreline_asc_desc = []; x_centreline_desc_dia = 
 uiwait(handles.figure1);
 
 % --- Outputs from this function are returned to the command line.
-function varargout = GUI_PWV_parasagittal_final_OutputFcn(hObject, eventdata, handles) 
-% varargout  cell array for returning output args (see VARARGOUT);
-% hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
+function varargout = GUI_PWV_parasagittal_fuse_OutputFcn(hObject, eventdata, handles) 
 global x_centreline y_centreline PixelSpacing transit_time path_length PWV
 setappdata(0,'x_centreline',x_centreline)
 setappdata(0,'y_centreline',y_centreline)
@@ -82,21 +78,26 @@ setappdata(0,'PixelSpacing',PixelSpacing)
 % Get default command line output from handles structure
 handles.output = [{x_centreline} {y_centreline} PixelSpacing transit_time path_length PWV];
 varargout{1} = handles.output;
-if (~isempty(x_centreline)) && (~isempty(y_centreline)) && (~isempty(PixelSpacing)) && (~isempty(transit_time)) && (~isempty(path_length)) && (~isempty(PWV))
+if (~isempty(x_centreline)) && (~isempty(y_centreline)) && (~isempty(PixelSpacing))
     uiresume
 end
 %- Store variable in handle
-guidata(hObject, handles);
+% guidata(hObject, handles);
+
+varargout{1} = handles.output;
+close 
+
 
 % --- Executes on button press in Load_scans_button.
 function Load_scans_button_Callback(hObject, eventdata, handles)
-global info Xf dname_folder axsize figsize x_up y_up x_down y_down transit_time path_length PWV current_folder path_scans path_flow
+global info Xf dname_folder axsize figsize x_up y_up x_down y_down transit_time path_length PWV current_folder path_scans path_flow z_ref_diaphragm_matrix z_ref_matrix z_ref_diaphragm z_ref PixelSpacing
 x_up = []; y_up = []; x_down = []; y_down = []; transit_time = []; path_length = []; PWV = [];
 current_folder = cd
+path_flow = getappdata(0,'path_flow')
 % if isempty(path_flow)==0
 %    cd(path_flow);
 % end
-path_scans = uigetdir(current_folder,'Select folder containing parasagittal scans');
+path_scans = uigetdir(path_flow,'Select folder containing parasagittal scans');
 cd(path_scans)
 files = dir('*.dcm');
 if size(files,1)==1
@@ -107,128 +108,32 @@ if size(files,1)==1
 else
     [Xf info] = fuse_images(files);
 end
-% Xf = delete_black_border(Xf);
-axes(handles.axes1)
-imshow(Xf);
-axsize=get(gca,'position');
-figsize=get(gcf,'position'); 
-cd(current_folder)
-axes(handles.axes2)
-guidata(hObject, handles);
 
-% --- Executes during object creation, after setting all properties.
-function Threshold_asc_slider_CreateFcn(hObject, eventdata, handles)
-
-% --- Executes on button press in Reference_slice_transit_time_button.
-function Reference_slice_transit_time_button_Callback(hObject, eventdata, handles)
-global z_ref Xf info dname_folder z_ref_matrix current_folder PixelSpacing z_ref_diaphragm_matrix transit_time_asc_desc ...
-    transit_time_desc_dia transit_time_asc_dia length_asc_desc length_desc_dia length_asc_dia transit_time path_length PWV ...
-    Tasc Tdesc Tdia Qasc Qdesc Qdia Aasc Adesc Adia path_scans path_flow
-current_folder = cd;
-if isempty(path_scans)==0
-    cd(path_scans)
-end
-[filename,path_flow]=uigetfile({'*.*','All Files'},...
-  'Select Ascending Flow File');
-[Tasc Tdesc Tdia Qasc Qdesc Qdia Aasc Adesc Adia] = extract_Q_wave([path_flow filename]);
-%- Display reference line across ascending-descending aorta
-cd(path_flow)
-files = dir('*.dcm');
-info_axial = dicominfo(files(1).name);
-setappdata(0,'info',info_axial)
-setappdata(0,'path_flow',path_flow)
-z_ref = info_axial.ImagePositionPatient(3);
+%- Retrieve reference lines
+z_ref = getappdata(0,'z_ref')
+z_ref_diaphragm = getappdata(0,'z_ref_diaphragm')
 PatientPosition = info.ImagePositionPatient;
-%- Solve problem
 PixelSpacing = info.PixelSpacing(2);
 z_loc = PatientPosition(3) - [0:size(Xf,1)].*PixelSpacing;
 [c z_ref_matrix] = min(abs(z_ref - z_loc));
-setappdata(0,'z_ref_matrix',z_ref_matrix)
 
-%- Artificially set diaphrahgm limit
-if ~isempty(Tdia)
-    [filename2,filepath2]=uigetfile({'*.*','All Files'},...
-    'Select Diaphragm Flow Folder');
-    %- Display reference line
-    cd(filepath2)
-    files = dir('*.dcm');
-    info_axial = dicominfo(files(1).name);
-    z_ref_diaphragm = info_axial.ImagePositionPatient(3);
-    [c z_ref_diaphragm_matrix] = min(abs(z_ref_diaphragm - z_loc));
-    setappdata(0,'z_ref_diaphragm_matrix',z_ref_diaphragm_matrix)
-end
-
-%- Find transit time
-cd(current_folder)
-if Tasc(1) == 0
-    freq = 1e3/Tasc(2);
-else
-    freq = 1e3/Tasc(1);
-end
-%- Open GUI for calculating transit time
-if isempty(Tdia)
-    flow = [Qasc Qdesc];
-    setappdata(0,'flow',flow)
-    setappdata(0,'freq',freq)
-    GUI_Transit_Time
-    %- Display TT ascending descending
-    transit_time_asc_desc = getappdata(0,'transit_time_asc_desc');
-    str_TT_asc_desc = sprintf('%.3f',transit_time_asc_desc)
-    set(handles.str_TT_asc_desc,'String',str_TT_asc_desc);
-    if ~isempty(length_asc_desc)==1
-        PWV_asc_desc = length_asc_desc*1e-3/transit_time_asc_desc;
-        PWV_asc_desc_str = sprintf('%.1f', PWV_asc_desc);
-        set(handles.str_PWV_asc_desc, 'String', PWV_asc_desc_str);
-    end
-else
-    flow = [Qasc Qdesc Qdia];
-    area = [Aasc Adesc Adia];
-    setappdata(0,'flow',flow)
-    setappdata(0,'area',area)
-    setappdata(0,'freq',freq)
-    GUI_Transit_Time_3_signals
-    %- Display TT ascending descending
-    transit_time_asc_desc = getappdata(0,'transit_time_asc_desc');
-    str_TT_asc_desc = sprintf('%.3f',transit_time_asc_desc)
-    set(handles.str_TT_asc_desc,'String',str_TT_asc_desc);
-    if ~isempty(length_asc_desc)==1
-        PWV_asc_desc = length_asc_desc*1e-3/transit_time_asc_desc;
-        PWV_asc_desc_str = sprintf('%.1f', PWV_asc_desc);
-        set(handles.str_PWV_asc_desc, 'String', PWV_asc_desc_str);
-    end
-    %- Display TT descending diaphragm
-    transit_time_desc_dia = getappdata(0,'transit_time_desc_dia');
-    str_TT_desc_dia = sprintf('%.3f',transit_time_desc_dia)
-    set(handles.str_TT_desc_dia,'String',str_TT_desc_dia);
-    if ~isempty(length_desc_dia)==1
-        PWV_desc_dia = length_desc_dia*1e-3/transit_time_desc_dia;
-        PWV_desc_dia_str = sprintf('%.1f', PWV_desc_dia);
-        set(handles.str_PWV_desc_dia, 'String', PWV_desc_dia_str);
-    end
-    %- Display TT ascending diaphragm
-    transit_time_asc_dia = getappdata(0,'transit_time_asc_dia');
-    str_TT_asc_dia = sprintf('%.3f',transit_time_asc_dia)
-    set(handles.str_TT_asc_dia,'String',str_TT_asc_dia);
-    if ~isempty(length_asc_dia)==1
-        PWV_asc_dia = length_asc_dia*1e-3/transit_time_asc_dia;
-        PWV_asc_dia_str = sprintf('%.1f', PWV_asc_dia);
-        set(handles.str_PWV_asc_desc, 'String', PWV_asc_dia_str);
-    end
-end
 
 %- Crop out black border and update new reference lines
 [Xf2 height_erase] = delete_black_border(Xf);
-% height_erase = height_initial - size(Xf2,1)
 z_ref_matrix = z_ref_matrix-height_erase;
 % Xf2 = Xf;
-if isempty(Tdia)==1
+if isempty(z_ref_diaphragm)==1
     Xf2([z_ref_matrix],:,:)=1;
 else
+    [c z_ref_diaphragm_matrix] = min(abs(z_ref_diaphragm - z_loc));
     z_ref_diaphragm_matrix = z_ref_diaphragm_matrix-height_erase;
     Xf2([z_ref_matrix ],:,:)=1;
     Xf2([z_ref_diaphragm_matrix],:,:)=1;
     
 end
+setappdata(0,'z_ref_diaphragm_matrix',z_ref_diaphragm_matrix)
+setappdata(0,'z_ref_matrix',z_ref_matrix)
+
 axes(handles.axes2)
 imshow(Xf2);
 Xf = Xf2;
@@ -237,8 +142,15 @@ axes(handles.axes1)
 imshow(Xf);
 cd(current_folder)
 
-%- Store variable in handle
+
+axsize=get(gca,'position');
+figsize=get(gcf,'position'); 
+cd(current_folder)
+axes(handles.axes2)
 guidata(hObject, handles);
+
+% --- Executes during object creation, after setting all properties.
+function Threshold_asc_slider_CreateFcn(hObject, eventdata, handles)
 
 % --- Executes on button press in Reset_button.
 function Reset_button_Callback(hObject, eventdata, handles)
@@ -509,7 +421,7 @@ end
 % --- Executes on button press in Left_boundary_diaphragm_button.
 function Left_boundary_diaphragm_button_Callback(hObject, eventdata, handles)
 global Xf x_left y_left x_right y_right info z_ref_matrix transit_time_asc_desc transit_time_desc_dia transit_time_asc_dia ...
-    length_asc_desc length_desc_dia length_atransit_time_asc_desc transit_time_desc_dia transit_time_asc_dia length_asc_desc ...
+    length_asc_desc length_desc_dia length_a transit_time_asc_desc transit_time_desc_dia transit_time_asc_dia length_asc_desc ...
     length_desc_dia length_asc_dia PWV_asc_desc PWV_desc_dia PWV_asc_diasc_dia PWV_asc_desc PWV_desc_dia PWV_asc_dia ...
     x_up y_up x_down y_down x_centreline_asc_desc y_centreline_asc_desc x_centreline_desc_dia y_centreline_desc_dia
 x_centreline_desc_dia = []; y_centreline_desc_dia = [];
@@ -690,32 +602,12 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-% --- Executes on button press in Button_Generate_Spreadsheet.
-function Button_Generate_Spreadsheet_Callback(hObject, eventdata, handles)
-global transit_time_asc_desc transit_time_desc_dia transit_time_asc_dia length_asc_desc length_desc_dia length_asc_dia ...
-        transit_time path_length PWV Tasc Tdesc Tdia Qasc Qdesc Qdia Aasc Adesc Adia PWV_asc_desc PWV_desc_dia PWV_asc_dia ...
-        info Dis_Asc Dis_Desc Dis_Dia path_scans path_flow flag_mode
-EF1 = getappdata(0,'EF1'); HR = getappdata(0,'HR'); SV = getappdata(0,'SV'); CO = getappdata(0,'CO');
-EDV = getappdata(0,'EDV'); EF = getappdata(0,'EF'); PP = getappdata(0,'PP'); DBP = getappdata(0,'DBP'); SBP = getappdata(0,'SBP');
-Pes = getappdata(0,'Pes'); ENd_est = getappdata(0,'ENd_est'); Ees = getappdata(0,'Ees'); tNd = getappdata(0,'tNd'); ENd_avg = getappdata(0,'ENd_avg');
-Dis_Asc = getappdata(0,'Dis_Asc'); Dis_Desc = getappdata(0,'Dis_Desc'); Dis_Dia = getappdata(0,'Dis_Dia'); 
-flag_mode = 'Extracted from parasagittal scans'
-
-path_origin = cd;
-if isempty(path_flow)==0
-    cd(path_flow);
-end
-if isempty(path_scans)==0
-    cd(path_scans);
-end
-if isempty(Tdia)
-    [filename,path,indx] = uiputfile('.xls')
-    generate_spreadsheet_1_part(filename,path,info,EF1,SV,HR,CO,length_asc_desc,transit_time_asc_desc,PWV_asc_desc,Dis_Asc,Dis_Desc,Tasc,Qasc,Qdesc,Aasc,Adesc,EDV,EF,PP,DBP,SBP,Pes,ENd_est,Ees,tNd,ENd_avg,flag_mode)
-else    
-    [filename,path,indx] = uiputfile('.xls')
-    generate_spreadsheet_3_parts(filename,path,info,EF1,SV,HR,CO,length_asc_desc,length_desc_dia,length_asc_dia,transit_time_asc_desc,transit_time_desc_dia,transit_time_asc_dia,PWV_asc_desc,PWV_desc_dia,PWV_asc_dia,Dis_Asc,Dis_Desc,Dis_Dia,Tasc,Qasc,Qdesc,Qdia,Aasc,Adesc,Adia,EDV,EF,PP,DBP,SBP,Pes,ENd_est,Ees,tNd,ENd_avg,flag_mode)
-end
-cd(path_origin)
+% --- Executes on button press in Button_Extract_Aortic_Arch.
+function Button_Extract_Aortic_Arch_Callback(hObject, eventdata, handles)
+global x_centreline_asc_desc y_centreline_asc_desc 
+setappdata(0,'x_centreline_asc_desc',x_centreline_asc_desc)
+setappdata(0,'y_centreline_asc_desc',y_centreline_asc_desc)
+uiresume
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% ADDITIONAL FUNCTIONS
@@ -1365,9 +1257,6 @@ for j = 1:size(signal1,1)
     % the end to the beginning, i.e. t=end to t=t(1).
     if continuous == 0
         d=1; % this case assufunction Button_Generate_Spreadsheet_Callback(hObject, eventdata, handles)
-% hObject    handle to Button_Generate_Spreadsheet (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)mes that only one waveform is available, i.e. MRI
     else
         d=0; % thsi case assumes continuous data with numerous waveforms
     end
@@ -2311,7 +2200,7 @@ function hfig = tightfig(hfig)
 
     set(hfig, 'Units', origfigunits);
 
-function [] = generate_spreadsheet_1_part(filename,path,info,EF1,SV,HR,CO,length_asc_desc,transit_time_asc_desc,PWV_asc_desc,Dis_Asc,Dis_Desc,Tasc,Qasc,Qdesc,Aasc,Adesc,EDV,EF,PP,DBP,SBP,Pes,ENd_est,Ees,tNd,ENd_avg,flag_mode)
+function [] = generate_spreadsheet_1_part(filename,path,info,EF1,SV,HR,CO,length_asc_desc,transit_time_asc_desc,PWV_asc_desc,Dis_Asc,Dis_Desc,Tasc,Qasc,Qdesc,Aasc,Adesc,EDV,EF,PP,DBP,SBP,Pes,ENd_est,Ees,tNd,ENd_avg)
 
 cd(path)
 
@@ -2351,7 +2240,6 @@ line_Patient_Info = [{'%%% PATIENT INFO','','','','',''};
        {'Scan date:',Field_ScanDate,'','','',''};
        {'DOB:',Field_DOB,'','','',''};
        {'Accession number:',Field_AccessionNumber,'','','',''};
-       {'Mode of extraction:',flag_mode,'','','',''};
        ];
 
    %% FLOW ANALYSIS
@@ -2402,12 +2290,12 @@ line_Luminal_Variations = [["%%% LUMINAL VARIATIONS","","","","",""];["Time (s)"
     [Tasc/1e3,Aasc,Adesc,filler,filler,filler]]
 
 %% ASSEMBLE TABLE
-T = [line_Patient_Info ; fill ; line_Flow_Analysis ; fill ; line_Pressure ; fill ; line_Asc_Desc_PWV ; fill ; line_Elastance ; fill ; line_Distensibility ; fill ; cellstr(line_Flow_Waves) ; fill ; cellstr(line_Luminal_Variations)];
+T = [line_Patient_Info ; fill ; line_Flow_Analysis ; fill ; line_Pressure ; fill ; line_Asc_Desc_PWV ; fill ; line_Desc_Dia_PWV ; fill ; line_Asc_Dia_PWV ; fill ; line_Elastance ; fill ; line_Distensibility ; fill ; cellstr(line_Flow_Waves) ; fill ; cellstr(line_Luminal_Variations)];
 
 %% WRITE FILE
 writecell(T,[path filename]);
 
-function [] = generate_spreadsheet_3_parts(filename,path,info,EF1,SV,HR,CO,length_asc_desc,length_desc_dia,length_asc_dia,transit_time_asc_desc,transit_time_desc_dia,transit_time_asc_dia,PWV_asc_desc,PWV_desc_dia,PWV_asc_dia,Dis_Asc,Dis_Desc,Dis_Dia,Tasc,Qasc,Qdesc,Qdia,Aasc,Adesc,Adia,EDV,EF,PP,DBP,SBP,Pes,ENd_est,Ees,tNd,ENd_avg,flag_mode)
+function [] = generate_spreadsheet_3_parts(filename,path,info,EF1,SV,HR,CO,length_asc_desc,length_desc_dia,length_asc_dia,transit_time_asc_desc,transit_time_desc_dia,transit_time_asc_dia,PWV_asc_desc,PWV_desc_dia,PWV_asc_dia,Dis_Asc,Dis_Desc,Dis_Dia,Tasc,Qasc,Qdesc,Qdia,Aasc,Adesc,Adia,EDV,EF,PP,DBP,SBP,Pes,ENd_est,Ees,tNd,ENd_avg)
 
 cd(path)
 
@@ -2447,7 +2335,6 @@ line_Patient_Info = [{'%%% PATIENT INFO','','','','',''};
        {'Scan date:',Field_ScanDate,'','','',''};
        {'DOB:',Field_DOB,'','','',''};
        {'Accession number:',Field_AccessionNumber,'','','',''};
-       {'Mode of extraction:',flag_mode,'','','',''};
        ];
 
    %% FLOW ANALYSIS

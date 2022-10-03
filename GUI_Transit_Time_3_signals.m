@@ -1741,7 +1741,7 @@ if isempty(Tdia)
     EF1_pct = EF1; SV_ml = SV; HR_bpm = HR; CO_m3_s = CO;
     cd(path_flow);
     [file,path,indx] = uiputfile('');
-    generate_spreadsheet_1_part(file,path,info,EF1,SV,HR,CO,length_asc_desc,transit_time_asc_desc,PWV_asc_desc,Dis_Asc,Dis_Desc,Tasc,Qasc,Qdesc,Aasc,Adesc,EDV,EF,PP,DBP,SBP,Pes,ENd_est,Ees,tNd,ENd_avg)
+    generate_spreadsheet_1_parts(file,path,info,EF1,SV,HR,CO,transit_time_asc_desc,Dis_Asc,Dis_Desc,Dis_Dia,Tasc,Qasc,Qdesc,Qdia,Aasc,Adesc,Adia,EDV,EF,PP,DBP,SBP,Pes,ENd_est,Ees,tNd,ENd_avg)
 else    
     Time_s = Tasc; Flow_Ascending_ml_s = Qasc; Flow_Descending_ml_s = Qdesc; Flow_Diaphragm_ml_s = Qdia;
     Area_Ascending_mm2 = Aasc; Area_Descending_mm2 = Adesc; Area_Diaphragm_mm2 = Adia; 
@@ -1750,11 +1750,11 @@ else
     EF1_pct = EF1; SV_ml = SV; HR_bpm = HR; CO_m3_s = CO;
     cd(path_flow);
     [file,path,indx] = uiputfile('.xls');
-    generate_spreadsheet_3_parts(file,path,info,EF1,SV,HR,CO,transit_time_asc_desc,transit_time_desc_dia,transit_time_asc_dia,PWV_asc_desc,PWV_desc_dia,PWV_asc_dia,Dis_Asc,Dis_Desc,Dis_Dia,Tasc,Qasc,Qdesc,Qdia,Aasc,Adesc,Adia,EDV,EF,PP,DBP,SBP,Pes,ENd_est,Ees,tNd,ENd_avg)
+    generate_spreadsheet_3_parts(file,path,info,EF1,SV,HR,CO,transit_time_asc_desc,transit_time_desc_dia,transit_time_asc_dia,Dis_Asc,Dis_Desc,Dis_Dia,Tasc,Qasc,Qdesc,Qdia,Aasc,Adesc,Adia,EDV,EF,PP,DBP,SBP,Pes,ENd_est,Ees,tNd,ENd_avg)
 end
 cd(path_origin)
 
-function [] = generate_spreadsheet_1_part(filename,path,info,EF1,SV,HR,CO,PWV_asc_desc,Dis_Asc,Dis_Desc,Tasc,Qasc,Qdesc,Aasc,Adesc,EDV,EF,PP,DBP,SBP,Pes,ENd_est,Ees,tNd,ENd_avg)
+function [] = generate_spreadsheet_1_part(filename,path,info,EF1,SV,HR,CO,transit_time_asc_desc,Dis_Asc,Dis_Desc,Tasc,Qasc,Qdesc,Aasc,Adesc,EDV,EF,PP,DBP,SBP,Pes,ENd_est,Ees,tNd,ENd_avg)
 
 cd(path)
 
@@ -1762,7 +1762,7 @@ fill = {'','','','','',''};
 
 %% PATIENT INFO
 %- Check fields exist
-if isfield(info,'FamilyName')
+if isfield(info,'PatientName')
     Field_Name = [info.PatientName.GivenName,' ',info.PatientName.FamilyName];
 else
     Field_Name = '';
@@ -1842,7 +1842,7 @@ line_Flow_Waves = [["%%% FLOW WAVES","","","","",""];["Time (s)","Ascending aort
 %% Luminal variations waves
 filler = strings(length(Aasc),1)
 line_Luminal_Variations = [["%%% Luminal variations","","","","",""];["Time (s)","Ascending aorta (mm2)","Descending aorta (mm2)","","",""];...
-    [Tasc/1e3,Qasc,Qdesc,filler,filler,filler]]
+    [Tasc/1e3,Aasc,Adesc,filler,filler,filler]]
 
 %% ASSEMBLE TABLE
 T = [line_Patient_Info ; fill ; line_Transit_Time ; fill ; line_Flow_Analysis ; fill ; line_Inputs ; fill ; line_Elastance ; fill ; line_Distensibility ; fill ; line_Flow_Waves ; fill ; line_Luminal_Variations];
@@ -1851,7 +1851,7 @@ T = [line_Patient_Info ; fill ; line_Transit_Time ; fill ; line_Flow_Analysis ; 
 writematrix(T,[path filename]);
 
 
-function [] = generate_spreadsheet_3_parts(filename,path,info,EF1,SV,HR,CO,transit_time_asc_desc,transit_time_desc_dia,transit_time_asc_dia,PWV_asc_desc,PWV_desc_dia,PWV_asc_dia,Dis_Asc,Dis_Desc,Dis_Dia,Tasc,Qasc,Qdesc,Qdia,Aasc,Adesc,Adia,EDV,EF,PP,DBP,SBP,Pes,ENd_est,Ees,tNd,ENd_avg)
+function [] = generate_spreadsheet_3_parts(filename,path,info,EF1,SV,HR,CO,transit_time_asc_desc,transit_time_desc_dia,transit_time_asc_dia,Dis_Asc,Dis_Desc,Dis_Dia,Tasc,Qasc,Qdesc,Qdia,Aasc,Adesc,Adia,EDV,EF,PP,DBP,SBP,Pes,ENd_est,Ees,tNd,ENd_avg)
 
 cd(path)
 
@@ -1859,7 +1859,7 @@ fill = {'','','','','',''};
 
 %% PATIENT INFO
 %- Check fields exist
-if isfield(info,'FamilyName')
+if isfield(info,'PatientName')
     Field_Name = [info.PatientName.GivenName,' ',info.PatientName.FamilyName];
 else
     Field_Name = '';
@@ -1939,7 +1939,7 @@ line_Flow_Waves = [["%%% FLOW WAVES","","","","",""];["Time (s)","Ascending aort
 %% Luminal variations waves
 filler = strings(length(Aasc),1)
 line_Luminal_Variations = [["%%% Luminal variations","","","","",""];["Time (s)","Ascending aorta (mm2)","Descending aorta (mm2)","Diaphragm (mm2)","",""];...
-    [Tasc/1e3,Qasc,Qdesc,Qdia,filler,filler]]
+    [Tasc/1e3,Aasc,Adesc,Adia,filler,filler]]
 
 %% ASSEMBLE TABLE
 T = [line_Patient_Info ; fill ; line_Transit_Time ; fill ; line_Flow_Analysis ; fill ; line_Inputs ; fill ; line_Elastance ; fill ; line_Distensibility ; fill ; line_Flow_Waves ; fill ; line_Luminal_Variations];

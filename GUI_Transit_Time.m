@@ -22,7 +22,7 @@ function varargout = GUI_Transit_Time(varargin)
 
 % Edit the above text to modify the response to help GUI_Transit_Time
 
-% Last Modified by GUIDE v2.5 09-Nov-2020 16:24:13
+% Last Modified by GUIDE v2.5 15-Jan-2021 16:20:50
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -46,6 +46,11 @@ end
 
 % --- Executes just before GUI_Transit_Time is made visible.
 function GUI_Transit_Time_OpeningFcn(hObject, eventdata, handles, varargin)
+global PP Amin_asc Amax_asc Amin_desc Amax_desc areamm2...
+    Dis_Asc Dis_Desc  EDV EF  DBP SBP Pes ENd_est Ees SV tNd ENd_avg
+PP = []; Amin_asc = []; Amax_asc = []; Amin_desc = []; Amax_desc = [];...
+areamm2 = []; Dis_Asc = []; Dis_Desc = []; EDV = [];...
+EF = []; DBP = []; SBP = []; Pes = []; ENd_est = []; Ees = []; SV = []; tNd = []; ENd_avg = [];
 
 % Choose default command line output for GUI_Transit_Time
 handles.output = hObject;
@@ -59,19 +64,22 @@ uiwait(handles.figure1);
 
 % --- Outputs from this function are returned to the command line.
 function varargout = GUI_Transit_Time_OutputFcn(hObject, eventdata, handles) 
-
-% Get default command line output from handles structure
+global  Dis_Asc Dis_Desc Dis_Dia EDV EF  DBP SBP Pes ENd_est Ees PP
 varargout{1} = handles.output;
-close
+setappdata(0,'Dis_Asc',Dis_Asc),setappdata(0,'Dis_Desc',Dis_Desc),setappdata(0,'Dis_Dia',Dis_Dia),setappdata(0,'EDV',EDV),
+setappdata(0,'EF',EF),setappdata(0,'DBP',DBP),setappdata(0,'SBP',SBP),setappdata(0,'Pes',Pes),setappdata(0,'PP',PP),
+setappdata(0,'ENd_est',ENd_est),setappdata(0,'Ees',Ees)
+close 
 
 % --- Executes when selected object is changed in uibuttongroup1.
 function uibuttongroup1_SelectionChangedFcn(hObject, eventdata, handles)
 % hObject    handle to the selected object in uibuttongroup1 
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global transit_time transit_time_asc_desc
+global transit_time transit_time_asc_desc PP areamm2 Dis_Asc Dis_Desc  EF1 SV HR CO tNd
 flow = getappdata(0,'flow')
 freq = getappdata(0,'freq')
+areamm2 = getappdata(0,'area');
 waveform = 2; %- velocity/flow waves
 continuous = 0; %- Single wave
 show = 1; %- Display wave in handles.axes1
@@ -105,28 +113,25 @@ switch(get(eventdata.NewValue,'Tag'));
         set(handles.Transit_time_str, 'String', TT_str);
 end
 transit_time_asc_desc = transit_time;
+
 %% Update flow analysis axis
 Q = flow(:,1); t = [1:length(Q)]./freq;
-%- Realign signal annd get timings
-% [c imax] = max(Q)
-% Qes = Q(1:imax)
-% dQes = diff(Qes)
-% [ind_intersection] = intersection(dQes)
-% if isempty(ind_intersection)==0
-%     Q = [Q(ind_intersection(end):end) ; Q(1:ind_intersection(end)-1)]
-% end
-[c i_systole] = max(Q);
+Qf = smooth(Q);
+[c i_systole] = max(Qf);
 Qt = Q(i_systole:end);
 ind_neg = intersection(Qt);
 if isempty(ind_neg)
-    [c ind] = findpeaks(-Qt);
+    [c ind] = findpeaks(-smooth(Qt,3));
     ind_intersection = ind(1);    
 else
     [ind_intersection] = ind_neg(1);
 end
 i_diastole = i_systole + ind_intersection(1) - 1;
-Qes = Q(1:i_systole); tes = t(1:i_systole);
-Qls = Q(i_systole:i_diastole);tls = t(i_systole:i_diastole);
+Qes = Qf(1:i_systole); tes = t(1:i_systole);
+Qls = Qf(i_systole:i_diastole);tls = t(i_systole:i_diastole);
+%- Get tNd
+t_pre_ejection = get_t_pre_ejection(Qf);
+tNd = t_pre_ejection/i_diastole;
 %- Plot and EF1
 axes(handles.axes_flow_analysis)
 hold all,
@@ -155,42 +160,38 @@ CO = SV*1e-3*HR;
 CO_str = sprintf('%.1f', CO);
 set(handles.str_CO, 'String', CO_str);
 setappdata(0,'CO',CO)
+%- Distensibility
+if isempty(PP)==0;
+    %- Ascending
+    Amin_asc = min(areamm2(:,1)); Amax_asc = max(areamm2(:,1));
+    Dis_Asc = (Amax_asc-Amin_asc)/Amin_asc/PP;
+    Dis_Asc_str = sprintf('%.1f', Dis_Asc);
+    set(handles.str_dis_asc, 'String', Dis_Asc_str);
+    %- Descending
+    Amin_desc = min(areamm2(:,2)); Amax_desc = max(areamm2(:,2));
+    Dis_Desc = (Amax_desc-Amin_desc)/Amin_desc/PP;
+    Dis_Desc_str = sprintf('%.1f', Dis_Desc);
+    set(handles.str_dis_desc, 'String', Dis_Desc_str);
+    return
+else
+    Dis_Asc = [];
+    Dis_Desc = [];
+end
+setappdata(0,'Dis_Asc',Dis_Asc);
+setappdata(0,'Dis_Desc',Dis_Desc);
 % Update handles structure
 guidata(hObject, handles);
 
 % --- Executes on button press in Save_button.
 function Save_button_Callback(hObject, eventdata, handles)
-global transit_time_asc_desc transit_time_desc_dia transit_time_asc_dia length_asc_desc length_desc_dia length_asc_dia ...
-        transit_time path_length PWV Tasc Tdesc Tdia Qasc Qdesc Qdia Aasc Adesc Adia PWV_asc_desc PWV_desc_dia PWV_asc_dia ...
-        info Dis_Asc Dis_Desc Dis_Dia Tasc Tdesc Tdia Qasc Qdesc Qdia Aasc Adesc Adia
+global transit_time_asc_desc 
 setappdata(0,'transit_time_asc_desc',transit_time_asc_desc)
-setappdata(0,'transit_time_desc_dia',transit_time_desc_dia)
-setappdata(0,'transit_time_asc_dia',transit_time_asc_dia)
-EF1 = getappdata(0,'EF1'); HR = getappdata(0,'HR'); SV = getappdata(0,'SV'); CO = getappdata(0,'CO');
-Dis_Asc = getappdata(0,'Dis_Asc'); Dis_Desc = getappdata(0,'Dis_Desc'); Dis_Dia = getappdata(0,'Dis_Dia');
-info = getappdata(0,'info');
-path_flow = getappdata(0,'path_flow')
-path_origin = cd;
-if isempty(Tdia)
-    Time_s = Tasc; Flow_Ascending_ml_s = Qasc; Flow_Descending_ml_s = Qdesc;
-    Area_Ascending_mm2 = Aasc; Area_Descending_mm2 = Adesc;
-    Length_Ascending_Descending_m = length_asc_desc; TT_Ascending_Descending_s = transit_time_asc_desc; PWV_Ascending_Descending_m_s = PWV_asc_desc;
-    EF1_pct = EF1; SV_ml = SV; HR_bpm = HR; CO_m3_s = CO;
-    cd(path_flow);
-    [file,path,indx] = uiputfile('.xls');
-    generate_spreadsheet_1_part(file,path,info,EF1,SV,HR,CO,transit_time_asc_desc,PWV_asc_desc,Dis_Asc,Dis_Desc,Tasc,Qasc,Qdesc,Aasc,Adesc)
-else    
-    Time_s = Tasc; Flow_Ascending_ml_s = Qasc; Flow_Descending_ml_s = Qdesc; Flow_Diaphragm_ml_s = Qdia;
-    Area_Ascending_mm2 = Aasc; Area_Descending_mm2 = Adesc; Area_Diaphragm_mm2 = Adia; 
-    TT_Ascending_Descending_s = transit_time_asc_desc; TT_Descending_Diaphragm_s = transit_time_desc_dia; TT_Ascending_Diaphragm_s = transit_time_asc_dia;
-    PWV_Ascending_Descending_m_s = PWV_asc_desc; PWV_Descending_Diaphragm_m_s = PWV_desc_dia; PWV_Ascending_Diaphragm_m_s = PWV_asc_dia;
-    EF1_pct = EF1; SV_ml = SV; HR_bpm = HR; CO_m3_s = CO;
-    cd(path_flow);
-    [file,path,indx] = uiputfile('.xls');
-    generate_spreadsheet_3_parts(file,path,info,EF1,SV,HR,CO,transit_time_asc_desc,transit_time_desc_dia,transit_time_asc_dia,PWV_asc_desc,PWV_desc_dia,PWV_asc_dia,Dis_Asc,Dis_Desc,Dis_Dia,Tasc,Qasc,Qdesc,Qdia,Aasc,Adesc,Adia)
-end
-cd(path_origin)
+%- Generate spreadsheet
+Generate_spreadsheet_button_Callback
+
 uiresume
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Executes on button press in Continue_button.
 function Continue_button_Callback(hObject, eventdata, handles)
@@ -1301,7 +1302,7 @@ end
 signal = signal1';
 
 function [ind_intersection] = intersection(flow)
-    l = length(flow);
+    l = length(flow); ind_intersection = [];
     m = 1;
     for k=2:l
         test = flow(k-1)*flow(k)
@@ -1310,209 +1311,410 @@ function [ind_intersection] = intersection(flow)
             m=m+1;
         end
     end
+    
 
-function [] = generate_spreadsheet_1_part(filename,path,info,EF1,SV,HR,CO,transit_time_asc_desc,PWV_asc_desc,Dis_Asc,Dis_Desc,Tasc,Qasc,Qdesc,Aasc,Adesc)
+function Generate_spreadsheet_button_Callback(hObject, eventdata, handles)
+global transit_time_asc_desc transit_time_desc_dia transit_time_asc_dia length_asc_desc length_desc_dia length_asc_dia ...
+        transit_time path_length PWV Tasc Tdesc Tdia Qasc Qdesc Qdia Aasc Adesc Adia PWV_asc_desc PWV_desc_dia PWV_asc_dia ...
+        info Dis_Asc Dis_Desc Dis_Dia Tasc Tdesc Tdia Qasc Qdesc Qdia Aasc Adesc Adia EDV EF PP DBP SBP Pes ENd_est Ees tNd ENd_avg
+EF1 = getappdata(0,'EF1'); HR = getappdata(0,'HR'); SV = getappdata(0,'SV'); CO = getappdata(0,'CO');
+Dis_Asc = getappdata(0,'Dis_Asc'); Dis_Desc = getappdata(0,'Dis_Desc'); Dis_Dia = getappdata(0,'Dis_Dia');
+info = getappdata(0,'info');
+path_flow = getappdata(0,'path_flow')
+path_origin = cd;
+cd(path_flow);
+[file,path,indx] = uiputfile('.xls');
+generate_spreadsheet_1_part(file,path,info,EF1,SV,HR,CO,transit_time_asc_desc,Dis_Asc,Dis_Desc,Tasc,Qasc,Qdesc,Aasc,Adesc,EDV,EF,PP,DBP,SBP,Pes,ENd_est,Ees,tNd,ENd_avg)
+cd(path_origin)
 
-cd(path)
 
-%% Global info
-filename = [filename,'.xls'];
-sheet=1;
-
-%% Patient Data
-xlRange='A1';
-Results_Names={'%%% PATIENT INFO'};
-xlswrite(filename,Results_Names,sheet,xlRange);
-xlRange='A2';
-Results_Names={'Name',[info.PatientName.GivenName,' ',info.PatientName.FamilyName]};
-xlswrite(filename,Results_Names,sheet,xlRange);
-xlRange='A3';
-Results_Names={'ID',[info.PatientID]};
-xlswrite(filename,Results_Names,sheet,xlRange);
-xlRange='A4';
-Results_Names={'Gender',[info.PatientSex]};
-xlswrite(filename,Results_Names,sheet,xlRange);
-xlRange='A5';
-DOB = [num2str(info.PatientBirthDate(7:8)),'/',num2str(info.PatientBirthDate(5:6)),'/',num2str(info.PatientBirthDate(1:4))];
-Results_Names={'Date Of Birth',DOB};
-xlswrite(filename,Results_Names,sheet,xlRange);
-xlRange='A6';
-Date_Scan = [num2str(info.StudyDate(7:8)),'/',num2str(info.StudyDate(5:6)),'/',num2str(info.StudyDate(1:4))];
-Results_Names={'Date Of Scan',Date_Scan};
-xlswrite(filename,Results_Names,sheet,xlRange);
-
-%% Flow Analysis
-xlRange='A8';
-Results_Names={'Flow analysis'};
-xlswrite(filename,Results_Names,sheet,xlRange);
-xlRange='A9';
-Results_Names={'EF1 (%):',[num2str(EF1,'%.2f\n')]};
-xlswrite(filename,Results_Names,sheet,xlRange);
-xlRange='A10';
-Results_Names={'SV (ml):',[num2str(SV,'%.2f\n')]};
-xlswrite(filename,Results_Names,sheet,xlRange);
-xlRange='A11';
-Results_Names={'HR (bpm):',[num2str(HR,'%.2f\n')]};
-xlswrite(filename,Results_Names,sheet,xlRange);
-xlRange='A12';
-Results_Names={'CO (L/min):',[num2str(CO,'%.2f\n')]};
-xlswrite(filename,Results_Names,sheet,xlRange);
-
-%% PWV analysis
-%- Ascending-Descending
-xlRange='A14';
-Results_Names={'Ascending-Descending PWV'};
-xlswrite(filename,Results_Names,sheet,xlRange);
-% xlRange='A15';
-% Results_Names={'Path length (m):',[num2str(length_asc_desc/1000,'%.3f\n')]};
-% xlswrite(filename,Results_Names,sheet,xlRange);
-xlRange='A16';
-Results_Names={'Transit time (s):',[num2str(transit_time_asc_desc,'%.3f\n')]};
-xlswrite(filename,Results_Names,sheet,xlRange);
-% xlRange='A17';
-% Results_Names={'PWV (m/s):',[num2str(PWV_asc_desc,'%.2f\n')]};
-% xlswrite(filename,Results_Names,sheet,xlRange);
-
-%% Distensibility analysis
-xlRange='A18';
-Results_Names={'%%% DISTENSIBILITY'};
-xlswrite(filename,Results_Names,sheet,xlRange);
-% xlRange='A19';
-% Results_Names={'Ascending Aorta Distensibility (/mmHg):',[num2str(Dis_Asc,'%.2e\n')]};
-% xlswrite(filename,Results_Names,sheet,xlRange);
-
-%% Plot Time, Flow and Area waveforms
-xlRange='A21';
-Results_Names={'Waveforms'};
-xlswrite(filename,Results_Names,sheet,xlRange);
-xlRange='A22';
-Results_Names={'Time (ms)','Q ascending (ml/s)','Q Descending (ml/s)'};
-xlswrite(filename,Results_Names,sheet,xlRange);
-xlRange='A23';
-Results_Values=[Tasc Qasc Qdesc];
-xlswrite(filename,Results_Values,sheet,xlRange);
-
-function [] = generate_spreadsheet_3_parts(filename,path,info,EF1,SV,HR,CO,transit_time_asc_desc,transit_time_desc_dia,transit_time_asc_dia,PWV_asc_desc,PWV_desc_dia,PWV_asc_dia,Dis_Asc,Dis_Desc,Dis_Dia,Tasc,Qasc,Qdesc,Qdia,Aasc,Adesc,Adia)
+function generate_spreadsheet_1_part(filename,path,info,EF1,SV,HR,CO,transit_time_asc_desc,Dis_Asc,Dis_Desc,Tasc,Qasc,Qdesc,Aasc,Adesc,EDV,EF,PP,DBP,SBP,Pes,ENd_est,Ees,tNd,ENd_avg)
 
 cd(path)
 
-%% Global info
-sheet=1;
+fill = {'','','','','',''};
 
-%% Patient Data
-xlRange='A1';
-Results_Names={'%%% PATIENT INFO'};
-xlswrite(filename,Results_Names,sheet,xlRange);
-xlRange='A2';
-Results_Names={'Name',[info.PatientName.GivenName,' ',info.PatientName.FamilyName]};
-xlswrite(filename,Results_Names,sheet,xlRange);
-xlRange='A3';
-Results_Names={'ID',[info.PatientID]};
-xlswrite(filename,Results_Names,sheet,xlRange);
-xlRange='A4';
-Results_Names={'Gender',[info.PatientSex]};
-xlswrite(filename,Results_Names,sheet,xlRange);
-xlRange='A5';
-DOB = [num2str(info.PatientBirthDate(7:8)),'/',num2str(info.PatientBirthDate(5:6)),'/',num2str(info.PatientBirthDate(1:4))];
-Results_Names={'Date Of Birth',DOB};
-xlswrite(filename,Results_Names,sheet,xlRange);
-xlRange='A6';
-Date_Scan = [num2str(info.StudyDate(7:8)),'/',num2str(info.StudyDate(5:6)),'/',num2str(info.StudyDate(1:4))];
-Results_Names={'Date Of Scan',Date_Scan};
-xlswrite(filename,Results_Names,sheet,xlRange);
-
-%% Flow Analysis
-xlRange='A8';
-Results_Names={'%%% FLOW ANALYSIS'};
-xlswrite(filename,Results_Names,sheet,xlRange);
-xlRange='A9';
-Results_Names={'EF1 (%):',[num2str(EF1,'%.2f\n')]};
-xlswrite(filename,Results_Names,sheet,xlRange);
-xlRange='A10';
-Results_Names={'SV (ml):',[num2str(SV,'%.2f\n')]};
-xlswrite(filename,Results_Names,sheet,xlRange);
-xlRange='A11';
-Results_Names={'HR (bpm):',[num2str(HR,'%.2f\n')]};
-xlswrite(filename,Results_Names,sheet,xlRange);
-xlRange='A12';
-Results_Names={'CO (L/min):',[num2str(CO,'%.2f\n')]};
-xlswrite(filename,Results_Names,sheet,xlRange);
-
-%% PWV analysis
-%- Ascending-Descending
-xlRange='A14';
-Results_Names={'%%% ASCENDING-DESCENDING PWV'};
-xlswrite(filename,Results_Names,sheet,xlRange);
-% xlRange='A15';
-% Results_Names={'Path length (m):',[num2str(length_asc_desc/1000,'%.3f\n')]};
-% xlswrite(filename,Results_Names,sheet,xlRange);
-xlRange='A16';
-Results_Names={'Transit time (s):',[num2str(transit_time_asc_desc,'%.3f\n')]};
-xlswrite(filename,Results_Names,sheet,xlRange);
-% xlRange='A17';
-% Results_Names={'PWV (m/s):',[num2str(PWV_asc_desc,'%.2f\n')]};
-% xlswrite(filename,Results_Names,sheet,xlRange);
-
-%- Descending-Diaphragm
-xlRange='A19';
-Results_Names={'%%% DESCENDINIG-DIAPHRAGM PWV'};
-xlswrite(filename,Results_Names,sheet,xlRange);
-% xlRange='A20';
-% Results_Names={'Path length (m):',[num2str(length_desc_dia/1000,'%.3f\n')]};
-% xlswrite(filename,Results_Names,sheet,xlRange);
-xlRange='A21';
-Results_Names={'Transit time (s):',[num2str(transit_time_desc_dia,'%.3f\n')]};
-xlswrite(filename,Results_Names,sheet,xlRange);
-% xlRange='A22';
-% Results_Names={'PWV (m/s):',[num2str(PWV_desc_dia,'%.2f\n')]};
-% xlswrite(filename,Results_Names,sheet,xlRange);
-
-%- Ascending-Diapragm
-xlRange='A24';
-Results_Names={'%%% ASCENDING-DIAPHRAGM PWV'};
-xlswrite(filename,Results_Names,sheet,xlRange);
-% xlRange='A25';
-% Results_Names={'Path length (m):',[num2str(length_asc_dia/1000,'%.3f\n')]};
-% xlswrite(filename,Results_Names,sheet,xlRange);
-xlRange='A26';
-Results_Names={'Transit time (s):',[num2str(transit_time_asc_dia,'%.3f\n')]};
-xlswrite(filename,Results_Names,sheet,xlRange);
-% xlRange='A27';
-% Results_Names={'PWV (m/s):',[num2str(PWV_asc_dia,'%.2f\n')]};
-% xlswrite(filename,Results_Names,sheet,xlRange);
-
-%% Distensibility analysis
-xlRange='A29';
-Results_Names={'%%% DISTENSIBILITY'};
-xlswrite(filename,Results_Names,sheet,xlRange);
-xlRange='A30';
-Results_Names={'Ascending Aorta Distensibility (/mmHg):',[num2str(Dis_Asc,'%.2e\n')]};
-xlswrite(filename,Results_Names,sheet,xlRange);
-xlRange='A31';
-Results_Names={'Descending Aorta Distensibility (/mmHg):',[num2str(Dis_Desc,'%.2e\n')]};
-xlswrite(filename,Results_Names,sheet,xlRange);
-xlRange='A32';
-Results_Names={'Diaphragm Aorta Distensibility (/mmHg):',[num2str(Dis_Dia,'%.2e\n')]};
-xlswrite(filename,Results_Names,sheet,xlRange);
-
-%% Plot Time, Flow and Area waveforms
-xlRange='A34';
-Results_Names={'%%% WAVEFORMS'};
-xlswrite(filename,Results_Names,sheet,xlRange);
-if ~isempty(Aasc)
-    xlRange='A35';
-    Results_Names={'Time (s)','Q ascending (ml/s)','Q descending (ml/s)','Q diaphragm (ml/s)','A ascending (mm2)','A descending (mm2)','A diaphragm (mm2)'};
-    xlswrite(filename,Results_Names,sheet,xlRange);
-    xlRange='A36';
-    Results_Values=[Tasc Qasc Qdesc Qdia Aasc Adesc Adia];
-    xlswrite(filename,Results_Values,sheet,xlRange);
+%% PATIENT INFO
+%- Check fields exist
+if isfield(info,'PatientName')
+    Field_Name = [info.PatientName.GivenName,' ',info.PatientName.FamilyName];
 else
-    xlRange='A35';
-    Results_Names={'Time (ms)','Q ascending (ml/s)','Q descending (ml/s)','Q diaphragm (ml/s)'};
-    xlswrite(filename,Results_Names,sheet,xlRange);
-    xlRange='A36';
-    Results_Values=[Tasc Qasc Qdesc Qdia];
-    xlswrite(filename,Results_Values,sheet,xlRange);
+    Field_Name = '';
+end
+if isfield(info,'PatientID')
+    Field_PatientID = [info.PatientID];
+else
+    Field_PatientID = '';
+end
+if isfield(info,'FileModDate')
+    Field_ScanDate = [info.FileModDate];
+else
+    Field_ScanDate = '';
+end
+if isfield(info,'PatientBirthDate') 
+    Field_DOB = [info.PatientBirthDate(end-1:end),'-',info.PatientBirthDate(end-3:end-2),'-',info.PatientBirthDate(1:4)];
+else
+    Field_DOB = '';
+end
+if isfield(info,'AccessionNumber')
+    Field_AccessionNumber = [info.AccessionNumber];
+else
+    Field_AccessionNumber = '';
 end
 
+line_Patient_Info = [{'%%% PATIENT INFO','','','','',''};
+       {'Name:',Field_Name,'','','',''};
+       {'Patient ID:',Field_PatientID,'','','',''};
+       {'Scan date:',Field_ScanDate,'','','',''};
+       {'DOB:',Field_DOB,'','','',''};
+       {'Accession number:',Field_AccessionNumber,'','','',''};
+       ];
+
+%% Transit time
+line_Transit_Time = [{'%%% TRANSIT TIME','','','','',''};
+       {'Transit time ascending-descending aorta:',transit_time_asc_desc,'s','','',''};
+       ];  
+   
+   %% FLOW ANALYSIS
+line_Flow_Analysis = [{'%%% FLOW ANALYSIS','','','','',''};
+       {'Stroke volume:',round(100*SV)/100,'ml','','',''};
+       {'Heart rate:',round(100*HR)/100,'bpm','','',''};
+       {'Cardiac output:',round(100*CO)/100,'L/min','','',''};
+       {'EF1:',round(100*EF1)/100,'%','','',''};
+       ];
+   
+%% INPUTS
+line_Inputs = [{'%%% INPUTS','','','','',''};
+       {'DBP:',DBP,'mmHg','','',''};
+       {'SBP:',SBP,'mmHg','','',''};
+       {'PP:',PP,'mmHg','','',''};
+       {'Pes:',Pes,'mmHg','','',''};
+       {'EDV:',round(EDV),'ml','','',''};
+       {'EF:',round(100*EF),'%','','',''};
+       ];   
+
+%% LV Elastance
+line_Elastance = [{'%%% ELASTANCE','','','','',''};
+       {'Elastance at onset of ejection (ENd):',round(ENd_est*100)/100,'mmHg/ml','','',''};
+       {'Elastance at end systole (Ees):',round(Ees*100)/100,'mmHg/ml','','',''};
+       ];   
+   
+%% Arterial Distensibility
+line_Distensibility = [{'%%% ARTERIAL DISTENSIBILITY','','','','',''};
+       {'Ascending aorta:',Dis_Asc,'/mmHg','','',''};
+       {'Descending aorta:',Dis_Desc,'/mmHg','','',''};
+       ];   
+   
+%% Flow waves
+filler = strings(length(Qasc),1)
+line_Flow_Waves = [["%%% FLOW WAVES","","","","",""];["Time (s)","Ascending aorta (ml/s)","Descending aorta (ml/s)","","",""];...
+    [Tasc/1e3,Qasc,Qdesc,filler,filler,filler]]
+
+%% Luminal variations waves
+filler = strings(length(Aasc),1)
+line_Luminal_Variations = [["%%% Luminal variations","","","","",""];["Time (s)","Ascending aorta (mm2)","Descending aorta (mm2)","","",""];...
+    [Tasc/1e3,Aasc,Adesc,filler,filler,filler]]
+
+%% ASSEMBLE TABLE
+T = [line_Patient_Info ; fill ; line_Transit_Time ; fill ; line_Flow_Analysis ; fill ; line_Inputs ; fill ; line_Elastance ; fill ; line_Distensibility ; fill ; line_Flow_Waves ; fill ; line_Luminal_Variations];
+
+%% WRITE FILE
+writematrix(T,[path filename]);
+
+function str_PP_Callback(hObject, eventdata, handles)
+global Amin_asc Amax_asc Amin_desc Amax_desc Amin_dia Amax_dia areamm2...
+    Dis_Asc Dis_Desc Dis_Dia EDV EF PP DBP SBP Pes ENd_est Ees ENd_avg tNd SV
+str_PP = get(hObject,'String')
+PP = str2double(str_PP);
+setappdata(0,'PP',PP);
+%- Prepare values
+if isempty(SBP)==0
+    DBP = SBP-PP;
+    DBP_str = sprintf('%.0f',DBP);
+    set(handles.str_DBP,'string',DBP_str);
+    setappdata(0,'DBP',DBP);
+end
+if isempty(DBP)==0
+    SBP = DBP+PP;
+    SBP_str = sprintf('%.0f',SBP);
+    set(handles.str_SBP,'string',SBP_str);
+    setappdata(0,'SBP',SBP);
+    if isempty(Pes)==1
+       Pes = 0.9*SBP; 
+       Pes_str = sprintf('%.0f',Pes);
+       set(handles.str_Pes,'string',Pes_str);
+       setappdata(0,'Pes',Pes);
+    end
+end
+
+%- Compute Elastance at the onset of ejection (ENd_est)
+if isempty(EF)==0 && isempty(DBP)==0 && isempty(Pes)==0
+    ENd_avg = compute_ENd_avg(tNd);
+    ENd_est = compute_ENd_est(EF,DBP,Pes,ENd_avg);
+    ENd_est_str = sprintf('%.2f', ENd_est);
+    set(handles.str_ENd_est,'string',ENd_est_str);
+    setappdata(0,'ENd_est',ENd_est);
+end
+%- Compute end-systolic Elastance (Ees)
+if isempty(DBP)==0 && isempty(ENd_est)==0 && isempty(SBP)==0 && isempty(SV)==0
+   Ees = compute_Ees(DBP,ENd_est,SBP,SV);
+   Ees_str = sprintf('%.2f', Ees);
+   set(handles.str_Ees,'string',Ees_str);
+   setappdata(0,'Ees',Ees);
+end
+%- Compute Distensibility 
+if isempty(areamm2)==0
+   [Dis_Asc Dis_Desc] = compute_distensibility(PP,areamm2);
+   Dis_Asc_str = sprintf('%1.1e', Dis_Asc); Dis_Desc_str = sprintf('%1.1e', Dis_Desc);
+   set(handles.str_dis_asc, 'String', Dis_Asc_str);set(handles.str_dis_desc, 'String', Dis_Desc_str);
+   setappdata(0,'Dis_Asc',Dis_Asc);setappdata(0,'Dis_Desc',Dis_Desc);
+end
+
+% --- Executes during object creation, after setting all properties.
+function str_PP_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function str_DBP_Callback(hObject, eventdata, handles)
+global Amin_asc Amax_asc Amin_desc Amax_desc Amin_dia Amax_dia areamm2...
+    Dis_Asc Dis_Desc Dis_Dia EDV EF PP DBP SBP Pes ENd_est Ees SV tNd ENd_avg
+str_DBP = get(hObject,'String')
+DBP = str2double(str_DBP);
+setappdata(0,'DBP',DBP);
+%- Prepare values
+if isempty(SBP)==0
+    PP = SBP-DBP;
+    PP_str = sprintf('%.0f',PP);
+    set(handles.str_PP,'string',PP_str);
+    setappdata(0,'PP',PP);
+end
+if isempty(PP)==0
+    SBP = DBP+PP;
+    SBP_str = sprintf('%.0f',SBP);
+    set(handles.str_SBP,'string',SBP_str);
+    setappdata(0,'SBP',SBP);
+    if isempty(Pes)==1
+        Pes = 0.9*SBP;
+        Pes_str = sprintf('%.0f',Pes);
+        set(handles.str_Pes,'string',Pes_str);
+        setappdata(0,'Pes',Pes);
+    end
+end
+%- Compute Elastance at the onset of ejection (ENd_est)
+if isempty(EF)==0 && isempty(DBP)==0 && isempty(Pes)==0
+    ENd_avg = compute_ENd_avg(tNd);
+    ENd_est = compute_ENd_est(EF,DBP,Pes,ENd_avg);
+    ENd_est_str = sprintf('%.2f', ENd_est);
+    set(handles.str_ENd_est,'string',ENd_est_str);
+    setappdata(0,'ENd_est',ENd_est);
+end
+%- Compute end-systolic Elastance (Ees)
+if isempty(DBP)==0 && isempty(ENd_est)==0 && isempty(SBP)==0 && isempty(SV)==0
+   Ees = compute_Ees(DBP,ENd_est,SBP,SV);
+   Ees_str = sprintf('%.2f', Ees);
+   set(handles.str_Ees,'string',Ees_str);
+   setappdata(0,'Ees',Ees);
+end
+%- Compute Distensibility 
+if isempty(PP)==0 && isempty(areamm2)==0
+   [Dis_Asc Dis_Desc] = compute_distensibility(PP,areamm2);
+   Dis_Asc_str = sprintf('%1.1e', Dis_Asc); Dis_Desc_str = sprintf('%1.1e', Dis_Desc);
+   set(handles.str_dis_asc, 'String', Dis_Asc_str);set(handles.str_dis_desc, 'String', Dis_Desc_str);
+   setappdata(0,'Dis_Asc',Dis_Asc);setappdata(0,'Dis_Desc',Dis_Desc);
+end
+
+% --- Executes during object creation, after setting all properties.
+function str_DBP_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function str_SBP_Callback(hObject, eventdata, handles)
+global Amin_asc Amax_asc Amin_desc Amax_desc Amin_dia Amax_dia areamm2...
+Dis_Asc Dis_Desc Dis_Dia EDV EF PP DBP SBP Pes ENd_est Ees SV tNd ENd_avg
+str_SBP = get(hObject,'String')
+SBP = str2double(str_SBP);
+setappdata(0,'SBP',SBP);
+%- Prepare values
+if isempty(DBP)==0
+    PP = SBP-DBP;
+    PP_str = sprintf('%.0f',PP);
+    set(handles.str_PP,'string',PP_str);
+    setappdata(0,'PP',PP);
+end
+if isempty(Pes)==1
+    Pes = SBP*0.9;
+    Pes_str = sprintf('%.0f',Pes);
+    set(handles.str_Pes,'string',Pes_str);
+    setappdata(0,'Pes',Pes);
+end
+if isempty(PP)==0 
+    DBP = SBP-PP;
+    DBP_str = sprintf('%.0f',DBP);
+    set(handles.str_DBP,'string',DBP_str);
+    setappdata(0,'DBP',DBP);
+end
+%- Compute Elastance at the onset of ejection (ENd_est)
+if isempty(EF)==0 && isempty(DBP)==0 && isempty(Pes)==0
+    ENd_avg = compute_ENd_avg(tNd);
+    ENd_est = compute_ENd_est(EF,DBP,Pes,ENd_avg);
+    ENd_est_str = sprintf('%.2f', ENd_est);
+    set(handles.str_ENd_est,'string',ENd_est_str);
+    setappdata(0,'ENd_est',ENd_est);
+end
+%- Compute end-systolic Elastance (Ees)
+if isempty(DBP)==0 && isempty(ENd_est)==0 && isempty(SBP)==0 && isempty(SV)==0
+   Ees = compute_Ees(DBP,ENd_est,SBP,SV);
+   Ees_str = sprintf('%.2f', Ees);
+   set(handles.str_Ees,'string',Ees_str);
+   setappdata(0,'Ees',Ees);
+end
+%- Compute Distensibility 
+if isempty(PP)==0 && isempty(areamm2)==0
+   [Dis_Asc Dis_Desc] = compute_distensibility(PP,areamm2);
+   Dis_Asc_str = sprintf('%1.1e', Dis_Asc); Dis_Desc_str = sprintf('%1.1e', Dis_Desc);
+   set(handles.str_dis_asc, 'String', Dis_Asc_str);set(handles.str_dis_desc, 'String', Dis_Desc_str);
+   setappdata(0,'Dis_Asc',Dis_Asc);setappdata(0,'Dis_Desc',Dis_Desc);
+end
+
+% --- Executes during object creation, after setting all properties.
+function str_SBP_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function str_Pes_Callback(hObject, eventdata, handles)
+global Amin_asc Amax_asc Amin_desc Amax_desc Amin_dia Amax_dia areamm2...
+Dis_Asc Dis_Desc Dis_Dia EDV EF PP DBP SBP Pes ENd_est Ees SV tNd ENd_avg
+str_Pes = get(hObject,'String')
+Pes = str2double(str_Pes);
+setappdata(0,'Pes',Pes);
+%- Compute Elastance at the onset of ejection (ENd_est)
+if isempty(EF)==0 && isempty(DBP)==0 && isempty(Pes)==0
+    ENd_avg = compute_ENd_avg(tNd);
+    ENd_est = compute_ENd_est(EF,DBP,Pes,ENd_avg);
+    ENd_est_str = sprintf('%.2f', ENd_est);
+    set(handles.str_ENd_est,'string',ENd_est_str);
+    setappdata(0,'ENd_est',ENd_est);
+end
+%- Compute end-systolic Elastance (Ees)
+if isempty(DBP)==0 && isempty(ENd_est)==0 && isempty(SBP)==0 && isempty(SV)==0
+   Ees = compute_Ees(DBP,ENd_est,SBP,SV);
+   Ees_str = sprintf('%.2f', Ees);
+   set(handles.str_Ees,'string',Ees_str);
+   setappdata(0,'Ees',Ees);
+end
+
+% --- Executes during object creation, after setting all properties.
+function str_Pes_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function str_EF_Callback(hObject, eventdata, handles)
+global Amin_asc Amax_asc Amin_desc Amax_desc Amin_dia Amax_dia areamm2...
+Dis_Asc Dis_Desc Dis_Dia EDV EF PP DBP SBP Pes ENd_est Ees SV tNd ENd_avg
+str_EF = get(hObject,'String')
+EF = str2double(str_EF);
+EF = EF/100;
+setappdata(0,'EF',EF);
+%- Compute value
+if isempty(SV)==0
+    EDV = SV/EF;
+    EDV_str = sprintf('%.0f',EDV);
+    set(handles.str_EDV,'string',EDV_str);
+    setappdata(0,'EDV',EDV);
+end
+%- Compute Elastance at the onset of ejection (ENd_est)
+if isempty(EF)==0 && isempty(DBP)==0 && isempty(Pes)==0
+    ENd_avg = compute_ENd_avg(tNd);
+    ENd_est = compute_ENd_est(EF,DBP,Pes,ENd_avg);
+    ENd_est_str = sprintf('%.2f', ENd_est);
+    set(handles.str_ENd_est,'string',ENd_est_str);
+    setappdata(0,'ENd_est',ENd_est);
+end
+%- Compute end-systolic Elastance (Ees)
+if isempty(DBP)==0 && isempty(ENd_est)==0 && isempty(SBP)==0 && isempty(SV)==0
+   Ees = compute_Ees(DBP,ENd_est,SBP,SV);
+   Ees_str = sprintf('%.2f', Ees);
+   set(handles.str_Ees,'string',Ees_str);
+   setappdata(0,'Ees',Ees);
+end
+
+% --- Executes during object creation, after setting all properties.
+function str_EF_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function str_EDV_Callback(hObject, eventdata, handles)
+global Amin_asc Amax_asc Amin_desc Amax_desc Amin_dia Amax_dia areamm2...
+Dis_Asc Dis_Desc Dis_Dia EDV EF PP DBP SBP Pes ENd_est Ees SV tNd ENd_avg
+str_EDV = get(hObject,'String')
+EDV = str2double(str_EDV);
+setappdata(0,'EDV',EDV);
+%- Create value
+if isempty(SV)==0
+    EF = round(SV*100/EDV);
+    EF_str = sprintf('%.0f',EF);
+    set(handles.str_EF,'string',EF_str);
+    EF = EF/100;
+    setappdata(0,'EF',EF);
+end
+%- Compute Elastance at the onset of ejection (ENd_est)
+if isempty(EF)==0 && isempty(DBP)==0 && isempty(Pes)==0
+    ENd_avg = compute_ENd_avg(tNd);
+    ENd_est = compute_ENd_est(EF,DBP,Pes,ENd_avg);
+    ENd_est_str = sprintf('%.2f', ENd_est);
+    set(handles.str_ENd_est,'string',ENd_est_str);
+    setappdata(0,'ENd_est',ENd_est);
+end
+%- Compute end-systolic Elastance (Ees)
+if isempty(DBP)==0 && isempty(ENd_est)==0 && isempty(SBP)==0 && isempty(SV)==0
+   Ees = compute_Ees(DBP,ENd_est,SBP,SV);
+   Ees_str = sprintf('%.2f', Ees);
+   set(handles.str_Ees,'string',Ees_str);
+   setappdata(0,'Ees',Ees);
+end
+
+% --- Executes during object creation, after setting all properties.
+function str_EDV_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function t_pre_ejection = get_t_pre_ejection(Q)
+    [c ind_max] = max(Q);
+    dQ = diff(Q);
+    [ind] = intersection(dQ);
+    ind_zero = find(ind==ind_max);
+    if ind_zero>1
+        t_pre_ejection = ind(1);
+    else
+        dQ_es = diff(Q(1:ind_max));
+        [c ind_min] = min(dQ_es);
+        t_pre_ejection = ind_min;
+    end
+    
+function ENd_avg = compute_ENd_avg(t)    
+    c = [0.35695;-7.2266;74.249;-307.39;684.54;-856.92;571.95;-159.1]
+    for k=1:length(c)
+        val(k) = c(k)*t^(k-1)        
+    end
+    ENd_avg = sum(val);
+    
+function ENd_est = compute_ENd_est(EF,DBP,Pes,ENd_avg) 
+    ENd_est = 0.0275 - 0.165*EF + 0.3656*DBP/Pes + 0.515*ENd_avg;
+
+function Ees = compute_Ees(DBP,ENd_est,SBP,SV) 
+    Ees = (DBP-ENd_est*SBP*0.9)/(SV*ENd_est);
+
+function [Dis_Asc Dis_Desc] = compute_distensibility(PP,areamm)
+    %- Ascending
+    Amin_asc = min(areamm(:,1)); Amax_asc = max(areamm(:,1));
+    Dis_Asc = (Amax_asc-Amin_asc)/Amin_asc/PP;
+    %- Descending
+    Amin_desc = min(areamm(:,2)); Amax_desc = max(areamm(:,2));
+    Dis_Desc = (Amax_desc-Amin_desc)/Amin_desc/PP;
     

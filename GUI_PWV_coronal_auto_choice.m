@@ -369,6 +369,7 @@ C_total = [C1 ; C2 ; C3];
 
 %- Interpolate signal
 C_total = interparc(1000,C_total(:,1),C_total(:,2),C_total(:,3),'spline');
+C_desc_dia = interparc(1000,C3(:,1),C3(:,2),C3(:,3),'spline');
 
 %- Plot spline
 axes(handles.axes1),plot3(C_total(:,1),C_total(:,2),C_total(:,3),'-*k')
@@ -377,7 +378,6 @@ axes(handles.axes1),plot3(C_total(:,1),C_total(:,2),C_total(:,3),'-*k')
 ind_top = find(C_total(:,3)>=z_ref)
 Xtop = C_total(ind_top,1); Ytop = C_total(ind_top,2); Ztop = C_total(ind_top,3); 
 length_asc_desc = calculate_aortic_arch_3D(Xtop*info{1}.PixelSpacing(1),Ytop*info{1}.PixelSpacing(1),Ztop);
-% length_asc_desc = length_asc_desc*info{1}.PixelSpacing(1);
 str_length_asc_desc = sprintf('%.3f', length_asc_desc/1e3);
 set(handles.str_length_asc_desc, 'String', str_length_asc_desc);
 z_ref
@@ -386,8 +386,8 @@ Zmax = max(Ztop)
 
 %- Calculate length from descending aorta down to diaphragm
 if flag_diapgragm == 1
-    ind_down = find(C_total(:,3)<=z_ref & C_total(:,3)>=z_ref_diaphragm);
-    Xdown = C_total(ind_down,1); Ydown = C_total(ind_down,2); Zdown = C_total(ind_down,3); 
+    ind_down = find(C_desc_dia(:,3)<=z_ref & C_desc_dia(:,3)>=z_ref_diaphragm);
+    Xdown = C_desc_dia(ind_down,1); Ydown = C_desc_dia(ind_down,2); Zdown = C_desc_dia(ind_down,3); 
     length_desc_dia = calculate_aortic_arch_3D(Xdown*info{1}.PixelSpacing(1),Ydown*info{1}.PixelSpacing(1),Zdown);
 %     length_desc_dia = length_desc_dia*info{1}.PixelSpacing(1);
     str_length_desc_dia = sprintf('%.3f', length_desc_dia/1e3);
@@ -448,10 +448,10 @@ path_origin = cd;
 cd(path_flow);
 if isempty(Tdia)
     [file,path,indx] = uiputfile('.xls');;
-    generate_spreadsheet_1_part(file,path,info_global,EF1,SV,HR,CO,length_asc_desc,transit_time_asc_desc,PWV_asc_desc,Dis_Asc,Dis_Desc,Tasc,Qasc,Qdesc,Aasc,Adesc,EDV,EF,PP,DBP,SBP,Pes,ENd_est,Ees,tNd,ENd_avg,C_total)
+    generate_spreadsheet_1_part(file,path,info_global,EF1,SV,HR,CO,length_asc_desc,transit_time_asc_desc,PWV_asc_desc,Dis_Asc,Dis_Desc,Tasc,Qasc,Qdesc,Aasc,Adesc,EDV,EF,PP,DBP,SBP,Pes,ENd_est,Ees,tNd,ENd_avg)
 else    
     [file,path,indx] = uiputfile('.xls');;
-    generate_spreadsheet_3_parts(file,path,info_global,EF1,SV,HR,CO,length_asc_desc,length_desc_dia,length_asc_dia,transit_time_asc_desc,transit_time_desc_dia,transit_time_asc_dia,PWV_asc_desc,PWV_desc_dia,PWV_asc_dia,Dis_Asc,Dis_Desc,Dis_Dia,Tasc,Qasc,Qdesc,Qdia,Aasc,Adesc,Adia,EDV,EF,PP,DBP,SBP,Pes,ENd_est,Ees,tNd,ENd_avg,C_total)
+    generate_spreadsheet_3_parts(file,path,info_global,EF1,SV,HR,CO,length_asc_desc,length_desc_dia,length_asc_dia,transit_time_asc_desc,transit_time_desc_dia,transit_time_asc_dia,PWV_asc_desc,PWV_desc_dia,PWV_asc_dia,Dis_Asc,Dis_Desc,Dis_Dia,Tasc,Qasc,Qdesc,Qdia,Aasc,Adesc,Adia,EDV,EF,PP,DBP,SBP,Pes,ENd_est,Ees,tNd,ENd_avg)
 end
 cd(path_origin)
 
@@ -2566,7 +2566,7 @@ T = [line_Patient_Info ; fill ; line_Flow_Analysis ; fill ; line_Pressure ; fill
 writecell(T,[path filename]);
 
 function [] = generate_spreadsheet_3_parts(filename,path,info,EF1,SV,HR,CO,length_asc_desc,length_desc_dia,length_asc_dia,transit_time_asc_desc,transit_time_desc_dia,transit_time_asc_dia,PWV_asc_desc,PWV_desc_dia,PWV_asc_dia,Dis_Asc,Dis_Desc,Dis_Dia,Tasc,Qasc,Qdesc,Qdia,Aasc,Adesc,Adia,EDV,EF,PP,DBP,SBP,Pes,ENd_est,Ees,tNd,ENd_avg)
-
+              
 cd(path)
 
 fill = {'','','','','',''};
