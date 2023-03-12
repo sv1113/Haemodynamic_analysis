@@ -502,9 +502,9 @@ function [Tasc Tdesc Tdia Qasc Qdesc Qdia Aasc Adesc Adia] = extract_Q_wave(file
 % datacell = data{:,:};
 fid = fopen(filepath,'r','n');
 bytes = fread(fid)';
-asciibytes = bytes(1:2:end); % strip out the zero bytes 
+% asciibytes = bytes(1:2:end); % strip out the zero bytes 
 fid = fopen('Temporary.txt','w','n','UTF-8');
-fwrite(fid,asciibytes);
+fwrite(fid,bytes);
 fclose(fid);
 data = readtable('Temporary.txt','Delimiter','\t','Format','%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s');
 datacell = data{:,:};
@@ -549,12 +549,12 @@ end
 % end
 
 if length(ind_separate)==1
-    ind_separate = [0 ; ind_separate ; length(d_id_ok)];
+    ind_separate = [0 ; ind_separate ; length(id_ok)];
     for k=1:2
         Time_ind{k} = [id_ok(ind_separate(k)+1):id_ok(ind_separate(k+1))]';
     end
 else
-    ind_separate = [0 ; ind_separate ; length(d_id_ok)];
+    ind_separate = [0 ; ind_separate ; length(id_ok)];
     for k=1:length(ind_separate)-1
         Time_ind{k} = [id_ok(ind_separate(k)+1):id_ok(ind_separate(k+1))]';
     end
@@ -566,108 +566,151 @@ idx2 = find(strcmp(C1,{'Time(ms)'}));
 idx = [idx1 idx2];
 
 if length(idx)==2
-    variable_output_A = [{'Aasc'},{'Adesc'}];
-    variable_output_Q = [{'Qasc'},{'Qdesc'}];
-    variable_output_t = [{'Tasc'},{'Tdesc'}];
+        variable_output_A = [{'Aasc'},{'Adesc'}];
+        variable_output_Q = [{'Qasc'},{'Qdesc'}];
+        variable_output_t = [{'Tasc'},{'Tdesc'}];
+        for k=1:2
+            variables_name = [datacell(idx(1),:)];
+            for i=1:length(variables_name)
+                if length(variables_name{i})>0
+                    variables_name{i} = variables_name{i}(1:4);
+                end
+            end
+            %- Time vector
+            eval([variable_output_t{k} '=datacell(Time_ind{k},1);'])
+            eval([variable_output_t{k} '= cell2mat(' variable_output_t{k} ');'])
+            %- Q vector
+            id_var = find(strcmp(variables_name,'Flow'));
+            eval([variable_output_Q{k} '=datacell(Time_ind{k},id_var);'])
+            eval(['id_ko = cellfun(@ischar,' variable_output_Q{k} ');'])
+            eval([variable_output_Q{k} '(id_ko)={0};'])
+            eval([variable_output_Q{k} '= cell2mat(' variable_output_Q{k} ');'])
+            %- A vector
+            id_var = find(strcmp(variables_name,'Area'));
+            eval([variable_output_A{k} '=datacell(Time_ind{k},id_var);'])
+            eval(['id_ko = cellfun(@ischar,' variable_output_A{k} ');'])
+            eval([variable_output_A{k} '(id_ko)={0};'])
+            eval([variable_output_A{k} '= cell2mat(' variable_output_A{k} ');'])
+        end
+        %- Make sure all vectors have the same length
+        if length(Tasc)~=length(Tdesc)
+            [c ind] = min([length(Tasc) length(Tdesc)]) 
+            if ind == 2
+                Aasc(c+1:end)=[];
+                Qasc(c+1:end)=[];
+                Tasc(c+1:end)=[];
+            else
+                Adesc(c+1:end)=[];
+                Qdesc(c+1:end)=[];
+                Tdesc(c+1:end)=[];
+            end          
+        end
 elseif length(idx)==3
-    variable_output_A = [{'Aasc'},{'Adesc'},{'Adia1'}];
-    variable_output_Q = [{'Qasc'},{'Qdesc'},{'Qdia1'}];
-    variable_output_t = [{'Tasc'},{'Tdesc'},{'Tdia1'}];
-else
-    variable_output_A = [{'Aasc'},{'Adesc'},{'Adia1'},{'Adia2'}];
-    variable_output_Q = [{'Qasc'},{'Qdesc'},{'Qdia1'},{'Qdia2'}];
-    variable_output_t = [{'Tasc'},{'Tdesc'},{'Tdia1'},{'Tdia2'}];
-end
-
-if length(idx)==2
-    for k=1:length(idx)
-        variables_name = [datacell(idx(1),:)];
-        for i=1:length(variables_name)
-            if length(variables_name{i})>0
-                variables_name{i} = variables_name{i}(1:4);
+        variable_output_A = [{'Aasc'},{'Adesc'},{'Adia'}];
+        variable_output_Q = [{'Qasc'},{'Qdesc'},{'Qdia'}];
+        variable_output_t = [{'Tasc'},{'Tdesc'},{'Tdia'}];
+        for k=1:3
+            variables_name = [datacell(idx(1),:)];
+            for i=1:length(variables_name)
+                if length(variables_name{i})>0
+                    variables_name{i} = variables_name{i}(1:4);
+                end
             end
+            %- Time vector
+            eval([variable_output_t{k} '=datacell(Time_ind{k},1);'])
+            eval([variable_output_t{k} '= cell2mat(' variable_output_t{k} ');'])
+            %- Q vector
+            id_var = find(strcmp(variables_name,'Flow'));
+            eval([variable_output_Q{k} '=datacell(Time_ind{k},id_var);'])
+            eval(['id_ko = cellfun(@ischar,' variable_output_Q{k} ');'])
+            eval([variable_output_Q{k} '(id_ko)={0};'])
+            eval([variable_output_Q{k} '= cell2mat(' variable_output_Q{k} ');'])
+            %- A vector
+            id_var = find(strcmp(variables_name,'Area'));
+            eval([variable_output_A{k} '=datacell(Time_ind{k},id_var);'])
+            eval(['id_ko = cellfun(@ischar,' variable_output_A{k} ');'])
+            eval([variable_output_A{k} '(id_ko)={0};'])
+            eval([variable_output_A{k} '= cell2mat(' variable_output_A{k} ');'])
         end
-        %- Time vector
-        eval([variable_output_t{k} '=datacell(Time_ind{k},1);'])
-        eval([variable_output_t{k} '= cell2mat(' variable_output_t{k} ');'])
-        %- Q vector
-        id_var = find(strcmp(variables_name,'Flow'));
-        eval([variable_output_Q{k} '=datacell(Time_ind{k},id_var);'])
-        eval(['id_ko = cellfun(@ischar,' variable_output_Q{k} ');'])
-        eval([variable_output_Q{k} '(id_ko)={0};'])
-        eval([variable_output_Q{k} '= cell2mat(' variable_output_Q{k} ');'])
-        %- A vector
-        id_var = find(strcmp(variables_name,'Area'));
-        eval([variable_output_A{k} '=datacell(Time_ind{k},id_var);'])
-        eval(['id_ko = cellfun(@ischar,' variable_output_A{k} ');'])
-        eval([variable_output_A{k} '(id_ko)={0};'])
-        eval([variable_output_A{k} '= cell2mat(' variable_output_A{k} ');'])
-    end
-    %- Make sure all vectors have the same length
-    if length(Tasc)~=length(Tdesc)
-       [c ind] = min([length(Tasc) length(Tdesc)]) 
-       if ind == 2
-           Aasc(c+1:end)=[];
-           Qasc(c+1:end)=[];
-           Tasc(c+1:end)=[];
-       else
-           Adesc(c+1:end)=[];
-           Qdesc(c+1:end)=[];
-           Tdesc(c+1:end)=[];
-       end          
-    end
+        %- Find the right diaphragm vectors
+        if Qdia == 0
+            Adia = [];
+            Qdia = [];
+            Tdia = [];
+            l = [length(Tasc) length(Tdesc)]
+        else
+            l = [length(Tasc) length(Tdesc) length(Tdia)]
+        end
+        %- Make sure all vectors have the same length
+        if length(unique(l))~=1
+            ind = min(l);
+            %- Ascending aorta signals
+            Aasc(ind+1:end)=[];
+            Qasc(ind+1:end)=[];
+            Tasc(ind+1:end)=[];
+            %- Descending aorta signals
+            Adesc(ind+1:end)=[];
+            Qdesc(ind+1:end)=[];
+            Tdesc(ind+1:end)=[];
+            %- Diaphragm aorta signals
+            Adia(ind+1:end)=[];
+            Qdia(ind+1:end)=[];
+            Tdia(ind+1:end)=[];     
+        end
 else
-    for k=1:length(idx)
-        variables_name = [datacell(idx(1),:)];
-        for i=1:length(variables_name)
-            if length(variables_name{i})>0
-                variables_name{i} = variables_name{i}(1:4);
+        variable_output_A = [{'Aasc'},{'Adesc'},{'Adia1'},{'Adia2'}];
+        variable_output_Q = [{'Qasc'},{'Qdesc'},{'Qdia1'},{'Qdia2'}];
+        variable_output_t = [{'Tasc'},{'Tdesc'},{'Tdia1'},{'Tdia2'}];
+        for k=1:4
+            variables_name = [datacell(idx(1),:)];
+            for i=1:length(variables_name)
+                if length(variables_name{i})>0
+                    variables_name{i} = variables_name{i}(1:4);
+                end
             end
+            %- Time vector
+            eval([variable_output_t{k} '=datacell(Time_ind{k},1);'])
+            eval([variable_output_t{k} '= cell2mat(' variable_output_t{k} ');'])
+            %- Q vector
+            id_var = find(strcmp(variables_name,'Flow'));
+            eval([variable_output_Q{k} '=datacell(Time_ind{k},id_var);'])
+            eval(['id_ko = cellfun(@ischar,' variable_output_Q{k} ');'])
+            eval([variable_output_Q{k} '(id_ko)={0};'])
+            eval([variable_output_Q{k} '= cell2mat(' variable_output_Q{k} ');'])
+            %- A vector
+            id_var = find(strcmp(variables_name,'Area'));
+            eval([variable_output_A{k} '=datacell(Time_ind{k},id_var);'])
+            eval(['id_ko = cellfun(@ischar,' variable_output_A{k} ');'])
+            eval([variable_output_A{k} '(id_ko)={0};'])
+            eval([variable_output_A{k} '= cell2mat(' variable_output_A{k} ');'])
         end
-        %- Time vector
-        eval([variable_output_t{k} '=datacell(Time_ind{k},1);'])
-        eval([variable_output_t{k} '= cell2mat(' variable_output_t{k} ');'])
-        %- Q vector
-        id_var = find(strcmp(variables_name,'Flow'));
-        eval([variable_output_Q{k} '=datacell(Time_ind{k},id_var);'])
-        eval(['id_ko = cellfun(@ischar,' variable_output_Q{k} ');'])
-        eval([variable_output_Q{k} '(id_ko)={0};'])
-        eval([variable_output_Q{k} '= cell2mat(' variable_output_Q{k} ');'])
-        %- A vector
-        id_var = find(strcmp(variables_name,'Area'));
-        eval([variable_output_A{k} '=datacell(Time_ind{k},id_var);'])
-        eval(['id_ko = cellfun(@ischar,' variable_output_A{k} ');'])
-        eval([variable_output_A{k} '(id_ko)={0};'])
-        eval([variable_output_A{k} '= cell2mat(' variable_output_A{k} ');'])
-    end
-    %- Find the right diaphragm vectors
-    if Qdia1 ~= 0
-        Adia = Adia1;
-        Qdia = Qdia1;
-        Tdia = Tdia1;
-    else
-        Adia = Adia2;
-        Qdia = Qdia2;
-        Tdia = Tdia2;
-    end
-    %- Make sure all vectors have the same length
-    l = [length(Tasc) length(Tdesc) length(Tdia)]
-    if length(unique(l))~=1
-       ind = min(l);
-       %- Ascending aorta signals
-       Aasc(ind+1:end)=[];
-       Qasc(ind+1:end)=[];
-       Tasc(ind+1:end)=[];
-       %- Descending aorta signals
-       Adesc(ind+1:end)=[];
-       Qdesc(ind+1:end)=[];
-       Tdesc(ind+1:end)=[];
-       %- Diaphragm aorta signals
-       Adia(ind+1:end)=[];
-       Qdia(ind+1:end)=[];
-       Tdia(ind+1:end)=[];     
-    end
-    clear Adia1 Adia2 Qdia1 Qdia2 Tdia1 Tdia2 
+        %- Find the right diaphragm vectors
+        if Qdia1 ~= 0
+            Adia = Adia1;
+            Qdia = Qdia1;
+            Tdia = Tdia1;
+        else
+            Adia = Adia2;
+            Qdia = Qdia2;
+            Tdia = Tdia2;
+        end
+        %- Make sure all vectors have the same length
+        l = [length(Tasc) length(Tdesc) length(Tdia)]
+        if length(unique(l))~=1
+           ind = min(l);
+           %- Ascending aorta signals
+           Aasc(ind+1:end)=[];
+           Qasc(ind+1:end)=[];
+           Tasc(ind+1:end)=[];
+           %- Descending aorta signals
+           Adesc(ind+1:end)=[];
+           Qdesc(ind+1:end)=[];
+           Tdesc(ind+1:end)=[];
+           %- Diaphragm aorta signals
+           Adia(ind+1:end)=[];
+           Qdia(ind+1:end)=[];
+           Tdia(ind+1:end)=[];     
+        end
 end
 
 if mean(Qasc)<0

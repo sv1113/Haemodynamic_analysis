@@ -1699,7 +1699,11 @@ function t_pre_ejection = get_t_pre_ejection(Q)
     dQ = diff(Q);
     [ind] = intersection(dQ);
     ind_zero = find(ind==ind_max);
-    t_pre_ejection = ind(ind_zero-1);
+    if ind_zero == 1
+        t_pre_ejection = 1;
+    else
+        t_pre_ejection = ind(ind_zero-1);
+    end
     
 function ENd_avg = compute_ENd_avg(t)    
     c = [0.35695;-7.2266;74.249;-307.39;684.54;-856.92;571.95;-159.1]

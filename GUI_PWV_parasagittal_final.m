@@ -1920,9 +1920,9 @@ function [Tasc Tdesc Tdia Qasc Qdesc Qdia Aasc Adesc Adia] = extract_Q_wave(file
 % datacell = data{:,:};
 fid = fopen(filepath,'r','n');
 bytes = fread(fid)';
-asciibytes = bytes(1:2:end); % strip out the zero bytes 
+% asciibytes = bytes(1:2:end); % strip out the zero bytes 
 fid = fopen('Temporary.txt','w','n','UTF-8');
-fwrite(fid,asciibytes);
+fwrite(fid,bytes);
 fclose(fid);
 data = readtable('Temporary.txt','Delimiter','\t','Format','%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s');
 datacell = data{:,:};
