@@ -2522,7 +2522,11 @@ fill = {'','','','','',''};
 %% PATIENT INFO
 %- Check fields exist
 if isfield(info,'PatientName')
-    Field_Name = [info.PatientName.GivenName,' ',info.PatientName.FamilyName];
+    if isfield(info,'PatientName.GivenName')
+        Field_Name = [info.PatientName.GivenName,' ',info.PatientName.FamilyName];
+    else
+        Field_Name = [info.PatientName.FamilyName];
+    end
 else
     Field_Name = '';
 end
@@ -2536,8 +2540,12 @@ if isfield(info,'FileModDate')
 else
     Field_ScanDate = '';
 end
-if isfield(info,'PatientBirthDate') 
-    Field_DOB = [info.PatientBirthDate(end-1:end),'-',info.PatientBirthDate(end-3:end-2),'-',info.PatientBirthDate(1:4)];
+if isfield(info,'PatientBirthDate')
+    if isempty(info.PatientBirthDate)==0
+        Field_DOB = [info.PatientBirthDate(end-1:end),'-',info.PatientBirthDate(end-3:end-2),'-',info.PatientBirthDate(1:4)];
+    else 
+        Field_DOB = '';
+    end
 else
     Field_DOB = '';
 end
